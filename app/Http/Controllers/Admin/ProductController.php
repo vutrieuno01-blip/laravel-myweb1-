@@ -55,6 +55,16 @@ class ProductController extends Controller
         return "Đang cập nhật sản phẩm có ID là: " . $id;
     }
 
+    public function test1()
+    {
+        return redirect()->route('admin.home');
+    }
+
+    public function test2()
+    {
+        return redirect('/admin/dashboard');
+    }
+
     /**
      * Remove the specified resource from storage.
      */
