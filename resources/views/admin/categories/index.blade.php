@@ -37,4 +37,8 @@
     </tbody>
 </table>
 
+<div class="mt-3">
+    {{ $list->links() }}
+</div>
+
 @endsection

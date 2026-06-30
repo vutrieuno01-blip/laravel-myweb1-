@@ -3,18 +3,24 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-
 use Illuminate\Http\Request;
-
-use Illuminate\Support\Facades\DB;
+use App\Models\Category;
 
 class CategoryController extends Controller
 {
+    // Hiển thị danh sách
     public function index()
     {
-        $list =
-        DB::table('categories')
-        ->get();
+        $list = Category::where(
+            'status',
+            1
+        )
+
+        ->orderBy(
+            'catename'
+        )
+
+        ->paginate(10);
 
         return view(
             'admin.categories.index',
@@ -22,6 +28,7 @@ class CategoryController extends Controller
         );
     }
 
+    // Hiển thị form thêm
     public function create()
     {
         return view(
@@ -29,17 +36,23 @@ class CategoryController extends Controller
         );
     }
 
+    // Lưu dữ liệu
     public function store(Request $request)
     {
-        DB::table('categories')
-        ->insert([
+        Category::create([
+
             'catename'
             =>
             $request->catename,
 
             'slug'
             =>
-            $request->slug
+            $request->slug,
+
+            'status'
+            =>
+            1
+
         ]);
 
         return redirect()
@@ -48,14 +61,11 @@ class CategoryController extends Controller
         );
     }
 
+    // Xóa
     public function destroy($id)
     {
-        DB::table('categories')
-        ->where(
-            'cateid',
-            $id
-        )
-        ->delete();
+        Category::find($id)
+        ?->delete();
 
         return redirect()
         ->route(
