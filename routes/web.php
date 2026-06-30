@@ -29,13 +29,29 @@ Route::get(
     [ProductController::class,'test2']
 );
 
-Route::prefix('admin')->group(function () {
-    Route::resource('category', CategoryController::class);
+Route::resource('categories', CategoryController::class);
+
+Route::get(
+    '/admin/dashboard',
+
+    function(){
+
+        return view(
+            'admin.dashboard'
+        );
+
+    }
+)
+
+->name(
+    'admin.home'
+);
+
+Route::prefix('admin')->name('admin.')->group(function () {
     Route::resource('brand', BrandController::class);
     Route::resource('post', PostController::class);
     Route::resource('product', ProductController::class);
     Route::resource('user', UserController::class);
-
     Route::get('/', function () {
         return view('admin.dashboard');
     });
@@ -44,5 +60,12 @@ Route::prefix('admin')->group(function () {
         function () {
             return view('admin.dashboard');
         }
-    )->name('admin.home');
+    )->name('home');
 });
+
+Route::resource(
+    'admin/categories',
+    CategoryController::class
+)->names(
+    'admin.categories'
+);

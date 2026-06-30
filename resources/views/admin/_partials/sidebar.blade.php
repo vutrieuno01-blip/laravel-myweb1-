@@ -35,9 +35,9 @@ id="category">
 
 <a
 class="nav-link text-white"
-href="{{ route('admin.home') }}">
+href="{{ route('admin.categories.index') }}">
 
-Loại SP
+Loại sản phẩm
 
 </a>
 
