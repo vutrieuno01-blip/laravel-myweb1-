@@ -11,18 +11,17 @@ class BrandSeeder extends Seeder
     public function run(): void
     {
         for ($i = 1; $i <= 10; $i++) {
-            $name = fake()->unique()->word();
-
-            DB::table('brands')
-                ->insert([
-                    'brandname' => $name,
-                    'slug' => Str::slug($name),
-                    'image' => 'brand.jpg',
-                    'status' => 1,
-                    'description' => fake()->sentence(),
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ]);
+            $name = fake()->unique()->words(2, true);
+            DB::table('brands')->insert([
+                'brandname' => ucfirst($name),
+                'slug' => Str::slug($name),
+                'image' => 'brand-' . $i . '.jpg',
+                'status' => fake()->numberBetween(0, 1),
+                'sort_order' => $i,
+                'description' => fake()->sentence(10),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
     }
 }

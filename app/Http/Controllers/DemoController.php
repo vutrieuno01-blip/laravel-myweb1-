@@ -6,13 +6,17 @@ use Illuminate\Http\Request;
 
 class DemoController extends Controller
 {
-    public function index4($id)
+    public function index()
     {
-        $data = "ABC";
-        dump($id);
-        return view('demoindex4', compact('data', 'id'));
+        return view('demoindex');
     }
 
+    public function index2()
+    {
+        $data = "Laravel";
+
+        return view('demoindex2', compact('data'));
+    }
     public function index3()
     {
         return response()->json([
@@ -23,16 +27,22 @@ class DemoController extends Controller
             ]
         ]);
     }
+    public function index4($id)
+    {
+        $data = "Laravel";
 
+        return view('demoindex4', compact('data', 'id'));
+    }
     public function index5($id = null)
     {
-        $data = "ABC";
+        $data = "Laravel";
+
         return view('demoindex5', compact('data', 'id'));
     }
-
-    public function index6($parram1, $parram2)
+    public function index6($param1, $param2)
     {
-        $data = "ABC";
-        return view('demoindex6', compact('data', 'parram1', 'parram2'));
+        $data = "Laravel";
+
+        return view('demoindex6', compact('data', 'param1', 'param2'));
     }
 }

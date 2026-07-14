@@ -1,6 +1,3 @@
-<footer
-class="bg-dark text-white text-center p-3">
-
-Admin Footer
-
+<footer class="bg-dark text-white text-center p-3 admin-footer">
+    Admin Footer
 </footer>

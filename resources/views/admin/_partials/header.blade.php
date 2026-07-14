@@ -1,27 +1,23 @@
-<nav class="navbar bg-light">
+<nav class="navbar navbar-light bg-light admin-header">
+    <div class="container-fluid">
+        <span class="navbar-brand">Admin Panel</span>
+        <div class="d-flex align-items-center gap-3">
+            @auth
+            <span>Xin chào <strong>{{ Auth::user()?->fullname ?? 'Quản trị viên' }}</strong></span>
 
-<div class="container-fluid">
+            @if (Route::has('admin.changepass'))
+            <a href="{{ route('admin.changepass') }}" class="text-decoration-none">Đổi mật khẩu</a>
+            @endif
 
-<span>
-Admin Panel
-</span>
-
-<ul class="nav">
-
-<li>
-<a class="nav-link">
-Xin chào
-</a>
-</li>
-
-<li>
-<a class="nav-link">
-Đăng xuất
-</a>
-</li>
-
-</ul>
-
-</div>
-
+            @if (Route::has('admin.logout'))
+            <form action="{{ route('admin.logout') }}" method="POST" class="m-0">
+                @csrf
+                <button type="submit" class="btn btn-link p-0 text-decoration-none">Đăng xuất</button>
+            </form>
+            @endif
+            @else
+            <span>Xin chào <strong>Khách</strong></span>
+            @endauth
+        </div>
+    </div>
 </nav>

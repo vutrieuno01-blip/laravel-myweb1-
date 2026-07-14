@@ -4,15 +4,27 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use App\Models\Post;
+use App\Http\Requests\Admin\PostRequest;
+use App\Models\User;
 
 class PostController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+
+    public function index($limit = 10)
     {
-        return "Đây là trang danh sách bài viết (Admin)";
+        $list = Post::with(['user:id,fullname'])
+            ->select('id', 'title', 'image', 'status', 'user_id')
+            ->orderBy('title')
+            ->paginate($limit);
+
+        return view('admin.posts.index', compact('list'));
     }
 
     /**
@@ -20,23 +32,42 @@ class PostController extends Controller
      */
     public function create()
     {
-        return "Đây là form thêm mới bài viết";
+        $users = User::all();
+        return view('admin.posts.create', compact('users'));
     }
-
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(PostRequest $request)
     {
-        return "Đang lưu thông tin bài viết mới";
-    }
+        try {
+            $imageName = null;
 
-    /**
-     * Display the specified resource.
-     */
+            if ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $imageName = Str::slug($request->title) . '-' . time() . '.' . $file->extension();
+                $file->storeAs('posts', $imageName, 'public');
+            }
+
+            Post::create([
+                'title'   => $request->title,
+                'slug'    => $request->slug,
+                'content' => $request->content,
+                'status'  => $request->status,
+                'user_id' => $request->user_id,
+                'image'   => $imageName,
+            ]);
+            return redirect()->route('admin.posts.index')
+                ->with('success', 'Thêm thành công.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Thêm thất bại.');
+        }
+    }
     public function show(string $id)
     {
-        return "Đang xem chi tiết bài viết có ID là: " . $id;
+        //
     }
 
     /**
@@ -44,25 +75,45 @@ class PostController extends Controller
      */
     public function edit(string $id)
     {
-        return "Đây là form chỉnh sửa bài viết có ID là: " . $id;
+        $post = Post::findOrFail($id);
+        $users = User::all();
+        return view('admin.posts.edit', compact('post', 'users'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(PostRequest $request, string $id)
     {
-        return "Đang cập nhật bài viết có ID là: " . $id; 
-    }
+        try {
+            $post = Post::findOrFail($id);
+            $imageName = $post->image;
 
-    public function test1()
-    {
-        return redirect()->route('admin.home');
-    }
+            if ($request->hasFile('image')) {
+                if ($imageName) {
+                    Storage::disk('public')->delete('posts/' . $imageName);
+                }
 
-    public function test2()
-    {
-        return redirect('/admin/dashboard');
+                $file = $request->file('image');
+                $imageName = Str::slug($request->title) . '-' . time() . '.' . $file->extension();
+                $file->storeAs('posts', $imageName, 'public');
+            }
+
+            $post->update([
+                'title'   => $request->title,
+                'slug'    => $request->slug,
+                'content' => $request->content,
+                'status'  => $request->status,
+                'user_id' => $request->user_id,
+                'image'   => $imageName,
+            ]);
+            return redirect()->route('admin.posts.index')
+                ->with('success', 'Cập nhật thành công.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Cập nhật thất bại.');
+        }
     }
 
     /**
@@ -70,6 +121,6 @@ class PostController extends Controller
      */
     public function destroy(string $id)
     {
-        return "Đang xóa bài viết có ID là: " . $id;
+        //
     }
 }

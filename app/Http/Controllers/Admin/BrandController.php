@@ -4,62 +4,113 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Brands;
+use App\Http\Requests\Admin\BrandRequest;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class BrandController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index($limit = 10)
     {
-        return "Đây là trang danh sách thương hiệu (Admin)";
+        $list = Brands::select('id', 'brandname', 'slug', 'image', 'status')
+            ->orderBy('brandname')
+            ->paginate($limit);
+
+        return view('admin.brands.index', compact('list'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        return "Đây là form thêm mới thương hiệu";
+        return view('admin.brands.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+
+
+
+
+    public function store(BrandRequest $request)
     {
-        return "Đang lưu thông tin thương hiệu mới";
+        try {
+
+            $fileName = null;
+            if ($request->hasFile('img')) {
+                $file = $request->file('img');
+                $fileName = Str::slug($request->brandname)
+                    . '-' . time()
+                    . '.' . $file->extension();
+
+                $file->storeAs('brands', $fileName, 'public');
+            }
+
+            Brands::create([
+                'brandname'   => $request->brandname,
+                'slug'        => $request->slug,
+                'status'      => $request->status,
+                'description' => $request->description,
+                'image'       => $fileName,
+            ]);
+
+            return redirect()
+                ->route('admin.brands.index')
+                ->with('success', 'Thêm thành công.');
+        } catch (\Exception $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Thêm thất bại.');
+        }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        return "Đang xem chi tiết thương hiệu có ID là: " . $id;
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
-        return "Đây là form chỉnh sửa thương hiệu có ID là: " . $id;
+        $item = Brands::find($id);
+        return view('admin.brands.edit', compact('item'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+
+    public function update(BrandRequest $request, string $id)
     {
-        return "Đang cập nhật thương hiệu có ID là: " . $id;
+        try {
+            $brand = Brands::findOrFail($id);
+
+            // Giữ ảnh cũ
+            $fileName = $brand->image;
+
+            // Nếu có chọn ảnh mới
+            if ($request->hasFile('img')) {
+                // Xóa ảnh cũ (nếu có)
+                if ($fileName) {
+                    Storage::disk('public')->delete('brands/' . $brand->image);
+                }
+                // Upload ảnh mới
+                $file = $request->file('img');
+                $fileName = Str::slug($request->brandname)
+                    . '-' . time()
+                    . '.' . $file->extension();
+                $file->storeAs('brands', $fileName, 'public');
+            }
+
+            $brand->update([
+                'brandname'   => $request->brandname,
+                'slug'        => $request->slug,
+                'status'      => $request->status,
+                'description' => $request->description,
+                'image'       => $fileName,
+            ]);
+
+            return redirect()->route('admin.brands.index')
+                ->with('success', 'Cập nhật thương hiệu thành công');
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+
     public function destroy(string $id)
     {
-        return "Đang xóa thương hiệu có ID là: " . $id;
+        Brands::find($id)->delete();
+        return redirect()->route('admin.brands.index')
+            ->with('success', 'Xóa thương hiệu thành công');
     }
 }

@@ -4,62 +4,82 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\User;
+use App\Http\Requests\Admin\UserRequest;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index($limit = 10)
     {
-        return "Đây là trang danh sách người dùng (Admin)";
+        $list = User::select('id', 'fullname', 'username', 'email', 'status')
+            ->orderBy('fullname')
+            ->paginate($limit);
+
+        return view('admin.users.index', compact('list'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        return "Đây là form thêm mới người dùng";
+        return view('admin.users.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(UserRequest $request)
     {
-        return "Đang lưu thông tin người dùng mới";
+        try {
+            User::create([
+                'fullname' => $request->fullname,
+                'username' => $request->username,
+                'email'    => $request->email,
+                'password' => Hash::make($request->password),
+                'phone'    => $request->phone,
+                'address'  => $request->address,
+                'status'   => $request->status,
+                'gender'   => $request->gender,
+                'birthday' => $request->birthday,
+                'role'     => $request->role,
+            ]);
+            return redirect()->route('admin.users.index')
+                ->with('success', 'Thêm thành công.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Thêm thất bại.');
+        }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        return "Đang xem chi tiết người dùng có ID là: " . $id;
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
-        return "Đây là form chỉnh sửa người dùng có ID là: " . $id;
+        $item = User::find($id);
+        return view('admin.users.edit', compact('item'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+
+   
+
+    public function update(UserRequest $request, string $id)
     {
-        return "Đang cập nhật người dùng có ID là: " . $id;
+        try {
+            $user = User::findOrFail($id);
+            $user->update([
+                'fullname' => $request->fullname,
+                'username' => $request->username,
+                'email'    => $request->email,
+                'status'   => $request->status,
+            ]);
+            return redirect()->route('admin.users.index')
+                ->with('success', 'Cập nhật thành công.');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Cập nhật thất bại.');
+        }
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
-        return "Đang xóa người dùng có ID là: " . $id;
+        User::find($id)->delete();
+        return redirect()->route('admin.users.index')
+            ->with('success', 'Xóa người dùng thành công');
     }
 }
