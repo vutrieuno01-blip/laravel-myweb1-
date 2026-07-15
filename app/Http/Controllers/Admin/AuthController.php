@@ -111,35 +111,61 @@ class AuthController extends Controller
     // Hiển thị trang quên mật khẩu
     public function forgotPassword()
     {
-        return view('admin.auth.forgotpassword');
+        return view('admin.auth.forgotpass');
     }
 
     // Xử lý quên mật khẩu
     public function postForgotPassword(Request $request)
     {
+        // Validate
         $request->validate(
             [
-                'username' => 'required|exists:users,username',
+                'email' => 'required|email'
             ],
             [
-                'required' => ':attribute không được để trống.',
-                'exists'   => ':attribute không tồn tại trong hệ thống.',
-            ],
-            [
-                'username' => 'Tên đăng nhập',
+                'email.required' => 'Email không được để trống',
+                'email.email' => 'Email không đúng định dạng'
             ]
         );
 
-        $user = User::where('username', $request->username)->first();
+        // Kiểm tra email tồn tại
+        $user = User::where('email', $request->email)->first();
 
-        // Reset mật khẩu về mặc định
-        $defaultPassword = '123456';
+        if (!$user) {
+            return back()
+                ->with('error', 'Email không tồn tại')
+                ->withInput();
+        }
+
+        // Tạo mật khẩu mới
+        $passwordRandom = Str::random(10);
+
+        // Mã hóa mật khẩu
+        $passwordEncrypt = Hash::make($passwordRandom);
+
+        // Cập nhật vào database
         $user->update([
-            'password' => Hash::make($defaultPassword),
+            'password' => $passwordEncrypt
         ]);
 
-        return back()->with('success', 'Mật khẩu đã được reset về: ' . $defaultPassword);
+        // Nội dung email
+        $html = "
+            <h2>Mật khẩu mới của bạn là: $passwordRandom</h2>
+            <p>Vui lòng đổi mật khẩu sau khi đăng nhập.</p>
+        ";
+
+        // Gửi email
+        Mail::html($html, function ($message) use ($request) {
+            $message->to($request->email)
+                ->subject('Đặt lại mật khẩu');
+        });
+
+        return back()->with(
+            'message',
+            'Đã gửi mật khẩu mới vào Email.'
+        );
     }
+
     // Hiển thị trang đổi mật khẩu
     public function changePassword()
     {
